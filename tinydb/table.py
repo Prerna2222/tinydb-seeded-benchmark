@@ -688,9 +688,6 @@ class Table:
         # Update the table by resetting all data
         self._update_table(lambda table: table.clear())
 
-        # Reset document ID counter
-        self._next_id = None
-
     def count(self, cond: QueryLike) -> int:
         """
         Count the documents matching a query.
