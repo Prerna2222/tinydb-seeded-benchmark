@@ -374,7 +374,7 @@ class Query(QueryInstance):
             if not isinstance(value, str):
                 return False
 
-            return re.search(regex, value, flags) is not None
+            return re.search(regex, value) is not None
 
         # Include flags in the hash so queries that differ only by flags do not
         # share a Table query-cache entry (see issue #637).
