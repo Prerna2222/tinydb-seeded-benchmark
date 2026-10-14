@@ -30,7 +30,7 @@ def add(field: str, n: Union[int, float, str]) -> Callable[[MutableMapping], Non
     Also works for strings (concatenation), matching the documented behavior.
     """
     def transform(doc: MutableMapping):
-        doc[field] += n
+        doc[field] = n + doc[field]
 
     return transform
 
