@@ -453,30 +453,18 @@ class Table:
                 table[doc_id].update(fields)
 
         if doc_ids is not None:
-            # Perform the update operation for documents specified by a list
-            # of document IDs. Document IDs that don't exist in the table are
-            # silently skipped, mirroring the behaviour of ``get(doc_ids=...)``
-            # (see issue #591). The list of *actually* updated IDs is
-            # determined inside the updater so it reflects the table state at
-            # write time.
             requested_ids = list(doc_ids)
             updated_ids: list[int] = []
 
             def updater(table: dict):
-                # Filter to IDs that exist *before* performing any updates,
-                # so the operation is atomic: either every existing target is
-                # updated, or none is.
-                updated_ids.extend(
-                    doc_id for doc_id in requested_ids if doc_id in table
-                )
-                for doc_id in updated_ids:
+                for doc_id in requested_ids:
                     perform_update(table, doc_id)
+                    updated_ids.append(doc_id)
 
-            # Perform the update operation (see _update_table for details)
             self._update_table(updater)
 
             return updated_ids
-
+        
         elif cond is not None:
             # Perform the update operation for documents specified by a query
 
