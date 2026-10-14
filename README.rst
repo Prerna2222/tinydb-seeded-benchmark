@@ -1,148 +1,108 @@
-.. image:: https://raw.githubusercontent.com/msiemens/tinydb/master/artwork/logo.png
-    :height: 150px
+# TinyDB Seeded Bug Benchmark
 
-|Build Status| |Coverage| |Version|
+A controlled bug-seeding benchmark built on [TinyDB](https://github.com/msiemens/tinydb), a lightweight document-oriented database written in Python.
 
-Quick Links
-***********
+## Overview
 
-- `Example Code`_
-- `Supported Python Versions`_
-- `Documentation <http://tinydb.readthedocs.org/>`_
-- `Changelog <https://tinydb.readthedocs.io/en/latest/changelog.html>`_
-- `Extensions <https://tinydb.readthedocs.io/en/latest/extensions.html>`_
-- `Contributing`_
+This repository contains a seeded version of TinyDB 4.9.0 with **10 intentionally introduced bugs** across its caching, table operations, query handling, storage, middleware, and utility modules.
 
-Introduction
-************
+The benchmark is intended to support systematic evaluation of debugging and software-engineering workflows. Participants can investigate unexpected behavior, identify root causes, and develop targeted fixes against an existing test suite.
 
-TinyDB is a lightweight document oriented database optimized for your happiness :)
-It's written in pure Python and has no external dependencies. The target are
-small apps that would be blown away by a SQL-DB or an external database server.
+## Base Repository
 
-TinyDB is:
+- **Upstream project:** [msiemens/tinydb](https://github.com/msiemens/tinydb)
+- **Version:** TinyDB 4.9.0
+- **Base commit:** `6d7c4fc3e04d398b1282876514660a33a7897b41`
+- **Seeded branch:** `seeded`
 
-- **tiny:** The current source code has 1800 lines of code (with about 40%
-  documentation) and 1600 lines tests.
+## Seeded Bug Categories
 
-- **document oriented:** Like MongoDB_, you can store any document
-  (represented as ``dict``) in TinyDB.
+| ID | Area | Intended behavior affected |
+|---|---|---|
+| P1-A | LRU cache | Cache recency updates |
+| P1-B | Query caching | Cacheability checks |
+| P2-A | Operations | String addition behavior |
+| P2-B | Table updates | Handling missing document IDs |
+| P3-A | Database | Table registry cleanup |
+| P3-B | Table operations | ID reset after truncation |
+| I1 | Middleware | Cache flush threshold |
+| I2 | Storage | Parent directory creation |
+| I3 | Queries | Regular-expression search flags |
+| I4 | Utilities | Recursive freezing of dictionary values |
 
-- **optimized for your happiness:** TinyDB is designed to be simple and
-  fun to use by providing a simple and clean API.
+These identifiers group the seeded defects by benchmark category. The actual code changes and observed test failures should be used to determine the precise behavior of each defect.
 
-- **written in pure Python:** TinyDB neither needs an external server (as
-  e.g. `PyMongo <https://pymongo.readthedocs.io/en/stable/>`_) nor any dependencies
-  from PyPI.
+## Setup
 
-- **works on Python 3.8+ and PyPy3:** TinyDB works on all modern versions of Python
-  and PyPy.
+Requirements:
 
-- **powerfully extensible:** You can easily extend TinyDB by writing new
-  storages or modify the behaviour of storages with Middlewares.
+- Python
+- Git
 
-- **100% test coverage:** No explanation needed.
+Clone the repository and switch to the seeded branch:
 
-To dive straight into all the details, head over to the `TinyDB docs
-<https://tinydb.readthedocs.io/>`_. You can also discuss everything related
-to TinyDB like general development, extensions or showcase your TinyDB-based
-projects on the `discussion forum <http://forum.m-siemens.de/.>`_.
+```bash
+git clone -b seeded https://github.com/Prerna2222/tinydb-seeded-benchmark.git
+cd tinydb-seeded-benchmark
+```
 
-Supported Python Versions
-*************************
+Create and activate a virtual environment:
 
-TinyDB has been tested with Python 3.8 - 3.13 and PyPy3.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
-Project Status
-**************
+Install the project and its test dependencies as required by the repository:
 
-This project is in maintenance mode. It has reached a mature, stable state
-where significant new features or architectural changes are not planned. That
-said, there will still be releases for bugfixes or features contributed by
-the community. Read more about what this means in particular
-`here <https://github.com/msiemens/tinydb/discussions/572>`_.
+```bash
+python -m pip install -e .
+python -m pip install pytest
+```
 
-Example Code
-************
+## Running Tests
 
-.. code-block:: python
+Run the test suite:
 
-    >>> from tinydb import TinyDB, Query
-    >>> db = TinyDB('/path/to/db.json')
-    >>> db.insert({'int': 1, 'char': 'a'})
-    >>> db.insert({'int': 1, 'char': 'b'})
+```bash
+python -m pytest -p no:cacheprovider -o addopts="" -q --tb=short
+```
 
-Query Language
-==============
+To generate a JUnit XML report, create a `results` directory in the parent workspace or adjust the report path to a directory that exists:
 
-.. code-block:: python
+```bash
+mkdir -p ../results
+python -m pytest -p no:cacheprovider -o addopts="" -q --tb=short --junitxml=../results/seeded.xml
+```
 
-    >>> User = Query()
-    >>> # Search for a field value
-    >>> db.search(User.name == 'John')
-    [{'name': 'John', 'age': 22}, {'name': 'John', 'age': 37}]
+## Current Validation Status
 
-    >>> # Combine two queries with logical and
-    >>> db.search((User.name == 'John') & (User.age <= 30))
-    [{'name': 'John', 'age': 22}]
+The recorded baseline on the unmodified upstream version was **228 passing tests**.
 
-    >>> # Combine two queries with logical or
-    >>> db.search((User.name == 'John') | (User.name == 'Bob'))
-    [{'name': 'John', 'age': 22}, {'name': 'John', 'age': 37}, {'name': 'Bob', 'age': 42}]
+The latest cumulative run on the seeded branch reported:
 
-    >>> # Negate a query with logical not
-    >>> db.search(~(User.name == 'John'))
-    [{'name': 'Megan', 'age': 27}, {'name': 'Bob', 'age': 42}]
+- **193 passed**
+- **35 failed**
+- **228 total**
 
-    >>> # Apply transformation to field with `map`
-    >>> db.search((User.age.map(lambda x: x + x) == 44))
-    >>> [{'name': 'John', 'age': 22}]
+These are cumulative results with all seeded defects active simultaneously. They do not establish that each defect independently causes a distinct set of failures. Independent reproduction and reference-fix validation remain separate validation tasks.
 
-    >>> # More possible comparisons:  !=  <  >  <=  >=
-    >>> # More possible checks: where(...).matches(regex), where(...).test(your_test_func)
+## Benchmark Scope
 
-Tables
-======
+The current scope focuses on planted defects in an existing Python codebase. It is intended to support:
 
-.. code-block:: python
+- Reproducing failing tests
+- Tracing failures to their underlying causes
+- Developing minimal, targeted patches
+- Running regression tests
+- Recording test outcomes for evaluation
 
-    >>> table = db.table('name')
-    >>> table.insert({'value': True})
-    >>> table.all()
-    [{'value': True}]
+## Notes
 
-Using Middlewares
-=================
+- The seeded branch intentionally differs from upstream TinyDB.
+- The cumulative test results are a snapshot of the current seeded state, not a claim that every defect has been independently validated.
+- Keep benchmark answer keys, reference patches, and private evaluation artifacts separate from any repository distributed to participants.
 
-.. code-block:: python
+## Acknowledgements
 
-    >>> from tinydb.storages import JSONStorage
-    >>> from tinydb.middlewares import CachingMiddleware
-    >>> db = TinyDB('/path/to/db.json', storage=CachingMiddleware(JSONStorage))
-
-
-Contributing
-************
-
-Whether reporting bugs, discussing improvements and new ideas or writing
-extensions: Contributions to TinyDB are welcome! Here's how to get started:
-
-1. Check for open issues or open a fresh issue to start a discussion around
-   a feature idea or a bug
-2. Fork `the repository <https://github.com/msiemens/tinydb/>`_ on Github,
-   create a new branch off the `master` branch and start making your changes
-   (known as `GitHub Flow <https://docs.github.com/en/get-started/using-github/github-flow>`_)
-3. Write a test which shows that the bug was fixed or that the feature works
-   as expected
-4. Send a pull request and bug the maintainer until it gets merged and
-   published ☺
-
-.. |Build Status| image:: https://img.shields.io/azure-devops/build/msiemens/3e5baa75-12ec-43ac-9728-89823ee8c7e2/2.svg?style=flat-square
-   :target: https://dev.azure.com/msiemens/github/_build?definitionId=2
-.. |Coverage| image:: http://img.shields.io/coveralls/msiemens/tinydb.svg?style=flat-square
-   :target: https://coveralls.io/r/msiemens/tinydb
-.. |Version| image:: http://img.shields.io/pypi/v/tinydb.svg?style=flat-square
-   :target: https://pypi.python.org/pypi/tinydb/
-.. _Buzhug: http://buzhug.sourceforge.net/
-.. _CodernityDB: https://github.com/perchouli/codernitydb
-.. _MongoDB: http://mongodb.org/
+This benchmark is based on [TinyDB](https://github.com/msiemens/tinydb), an open-source Python project.
