@@ -151,7 +151,7 @@ def freeze(obj):
     """
     if isinstance(obj, dict):
         # Transform dicts into ``FrozenDict``s
-        return FrozenDict((k, freeze(v)) for k, v in obj.items())
+        return FrozenDict((k, v) for k, v in obj.items())
     elif isinstance(obj, list):
         # Transform lists into tuples
         return tuple(freeze(el) for el in obj)
