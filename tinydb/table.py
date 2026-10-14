@@ -288,11 +288,8 @@ class Table:
         # This is to keep consistency with TinyDB's behavior before
         # `is_cacheable` was introduced which assumed that all queries
         # are cacheable.
-        is_cacheable: Callable[[], bool] = getattr(cond, 'is_cacheable',
-                                                   lambda: True)
-        if is_cacheable():
-            # Update the query cache
-            self._query_cache[cond] = docs[:]
+        # Update the query cache
+        self._query_cache[cond] = docs[:]
 
         return docs
 
