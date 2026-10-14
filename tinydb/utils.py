@@ -86,8 +86,6 @@ class LRUCache(abc.MutableMapping, Generic[K, V]):
         if value is _missing:
             raise KeyError(key)
 
-        self.cache.move_to_end(key, last=True)
-
         return cast(V, value)
 
     def __iter__(self) -> Iterator[K]:
