@@ -169,10 +169,6 @@ class TinyDB(TableBase):
         # to the storage thereby returning to the initial state with no tables.
         self.storage.write({})
 
-        # After that we need to remember to empty the ``_tables`` dict, so we'll
-        # create new table instances when a table is accessed again.
-        self._tables.clear()
-
     def drop_table(self, name: str) -> None:
         """
         Drop a specific table from the database. **CANNOT BE REVERSED!**
